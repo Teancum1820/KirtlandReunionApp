@@ -38,9 +38,9 @@ import {
 } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import './App.css'
+import { locations } from './data/locations'
 import {
   families,
-  locations,
   reunionConfig,
   scheduleEvents,
 } from './data/reunion'
@@ -85,12 +85,13 @@ const categoryMeta: Record<
   LocationCategory,
   { label: string; color: string; icon: string }
 > = {
-  historic: { label: 'Historic sites', color: '#9a5a36', icon: '★' },
-  shuttle: { label: 'Shuttles', color: '#1c6b63', icon: 'S' },
-  restroom: { label: 'Restrooms', color: '#2463a7', icon: 'R' },
-  food: { label: 'Food', color: '#ad6a16', icon: 'F' },
+  historic: { label: 'Historic sites', color: '#9a5a36', icon: 'H' },
+  dining: { label: 'Dining', color: '#ad6a16', icon: 'D' },
+  shopping: { label: 'Shopping', color: '#2463a7', icon: 'S' },
+  lodging: { label: 'Lodging', color: '#75537c', icon: 'L' },
+  community: { label: 'Community', color: '#1c6b63', icon: 'C' },
+  outdoors: { label: 'Parks & nature', color: '#4f7b42', icon: 'N' },
   parking: { label: 'Parking', color: '#5b6270', icon: 'P' },
-  gathering: { label: 'Gathering', color: '#6f4aa0', icon: 'G' },
 }
 
 const formatEventTime = (iso: string) =>
@@ -629,22 +630,39 @@ function ScheduleView({
 
 function MapFocus({ position }: { position: [number, number] | null }) {
   const map = useMap()
+  const lat = position?.[0]
+  const lng = position?.[1]
+
   useEffect(() => {
-    if (position) map.flyTo(position, 15)
-  }, [map, position])
+    if (lat !== undefined && lng !== undefined) map.flyTo([lat, lng], 15)
+  }, [lat, lng, map])
+
   return null
 }
 
 function ExploreMap() {
   const [category, setCategory] = useState<LocationCategory | 'all'>('all')
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
+    null,
+  )
   const [userPosition, setUserPosition] = useState<[number, number] | null>(
     null,
   )
   const [locationError, setLocationError] = useState('')
+  const selectedLocation =
+    locations.find((location) => location.id === selectedLocationId) ?? null
+  const focusPosition: [number, number] | null = selectedLocation
+    ? [selectedLocation.lat, selectedLocation.lng]
+    : userPosition
   const visibleLocations =
     category === 'all'
       ? locations
       : locations.filter((location) => location.category === category)
+
+  const selectCategory = (nextCategory: LocationCategory | 'all') => {
+    setCategory(nextCategory)
+    setSelectedLocationId(null)
+  }
 
   const locateUser = () => {
     if (!navigator.geolocation) {
@@ -657,6 +675,7 @@ function ExploreMap() {
           position.coords.latitude,
           position.coords.longitude,
         ])
+        setSelectedLocationId(null)
         setLocationError('')
       },
       () => setLocationError('Allow location access to show your position.'),
@@ -668,8 +687,8 @@ function ExploreMap() {
     <div className="map-page">
       <div className="map-header content-wrap">
         <PageHeader
-          eyebrow="Kirtland, Ohio"
-          title="Explore nearby"
+          eyebrow="From the 2026 Kirtland map"
+          title="Explore Kirtland"
           action={
             <button className="locate-button" onClick={locateUser} type="button">
               <LocateFixed size={18} />
@@ -680,7 +699,7 @@ function ExploreMap() {
         <div className="map-filters">
           <button
             className={category === 'all' ? 'active' : ''}
-            onClick={() => setCategory('all')}
+            onClick={() => selectCategory('all')}
             type="button"
           >
             All places
@@ -689,7 +708,7 @@ function ExploreMap() {
             <button
               className={category === key ? 'active' : ''}
               key={key}
-              onClick={() => setCategory(key)}
+              onClick={() => selectCategory(key)}
               type="button"
             >
               <span style={{ background: categoryMeta[key].color }} />
@@ -711,7 +730,7 @@ function ExploreMap() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapFocus position={userPosition} />
+            <MapFocus position={focusPosition} />
             {userPosition && (
               <Circle
                 center={userPosition}
@@ -723,9 +742,13 @@ function ExploreMap() {
             )}
             {visibleLocations.map((location) => {
               const meta = categoryMeta[location.category]
+              const isSelected = selectedLocationId === location.id
+              const markerLabel = location.mapNumber ?? meta.icon
               const marker = divIcon({
-                className: 'custom-map-marker',
-                html: `<span style="background:${meta.color}"><b>${meta.icon}</b></span>`,
+                className: isSelected
+                  ? 'custom-map-marker selected'
+                  : 'custom-map-marker',
+                html: `<span style="background:${meta.color}"><b>${markerLabel}</b></span>`,
                 iconAnchor: [18, 36],
                 popupAnchor: [0, -37],
               })
@@ -734,12 +757,22 @@ function ExploreMap() {
                   icon={marker}
                   key={location.id}
                   position={[location.lat, location.lng]}
+                  eventHandlers={{
+                    click: () => setSelectedLocationId(location.id),
+                  }}
                 >
                   <Popup>
                     <div className="map-popup">
-                      <span>{meta.label}</span>
+                      <span>
+                        {location.mapNumber
+                          ? `Map stop ${location.mapNumber} · ${meta.label}`
+                          : meta.label}
+                      </span>
                       <strong>{location.name}</strong>
                       <p>{location.description}</p>
+                      {location.address && (
+                        <small>{location.address}</small>
+                      )}
                       <a
                         href={`https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`}
                         rel="noreferrer"
@@ -756,29 +789,48 @@ function ExploreMap() {
         </div>
 
         <aside className="place-list">
-          <span className="eyebrow">{visibleLocations.length} nearby places</span>
+          <span className="eyebrow">
+            {visibleLocations.length} places from the reference map
+          </span>
           {visibleLocations.map((location) => {
             const meta = categoryMeta[location.category]
+            const isSelected = selectedLocationId === location.id
             return (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`}
+              <div
+                className={isSelected ? 'place-card selected' : 'place-card'}
                 key={location.id}
-                rel="noreferrer"
-                target="_blank"
               >
-                <span
-                  className="place-marker"
-                  style={{ background: meta.color }}
+                <button
+                  className="place-focus"
+                  onClick={() => setSelectedLocationId(location.id)}
+                  type="button"
                 >
-                  {meta.icon}
-                </span>
-                <span>
-                  <small>{meta.label}</small>
-                  <strong>{location.name}</strong>
-                  <p>{location.description}</p>
-                </span>
-                <Navigation size={17} />
-              </a>
+                  <span
+                    className="place-marker"
+                    style={{ background: meta.color }}
+                  >
+                    {location.mapNumber ?? meta.icon}
+                  </span>
+                  <span>
+                    <small>
+                      {location.mapNumber
+                        ? `Map stop ${location.mapNumber} · ${meta.label}`
+                        : meta.label}
+                    </small>
+                    <strong>{location.name}</strong>
+                    <p>{location.address ?? location.description}</p>
+                  </span>
+                </button>
+                <a
+                  aria-label={`Get directions to ${location.name}`}
+                  className="place-directions"
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <Navigation size={17} />
+                </a>
+              </div>
             )
           })}
         </aside>

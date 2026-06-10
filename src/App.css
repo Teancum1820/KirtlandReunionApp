@@ -877,6 +877,13 @@
   transform: rotate(45deg);
 }
 
+.custom-map-marker.selected span {
+  transform: rotate(-45deg) scale(1.16);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.72),
+    0 7px 20px rgba(29, 44, 40, 0.38);
+}
+
 .map-popup {
   min-width: 180px;
   padding: 4px 2px;
@@ -908,6 +915,14 @@
   line-height: 1.4;
 }
 
+.map-popup small {
+  display: block;
+  margin: -2px 0 9px;
+  color: var(--muted);
+  font-size: 0.64rem;
+  line-height: 1.35;
+}
+
 .map-popup a {
   color: var(--teal);
   font-size: 0.7rem;
@@ -924,15 +939,43 @@
   margin-bottom: 3px;
 }
 
-.place-list a {
+.place-card {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: 13px;
   border: 1px solid var(--line);
   border-radius: 13px;
   background: var(--paper);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.place-card.selected {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(23, 94, 88, 0.12);
+}
+
+.place-focus {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 13px;
+  border: 0;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.place-directions {
+  display: grid;
+  width: 44px;
+  min-height: 46px;
+  place-items: center;
+  border-left: 1px solid var(--line);
+  color: var(--teal);
 }
 
 .place-marker {
