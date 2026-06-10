@@ -92,6 +92,7 @@ const categoryMeta: Record<
   community: { label: 'Community', color: '#1c6b63', icon: 'C' },
   outdoors: { label: 'Parks & nature', color: '#4f7b42', icon: 'N' },
   parking: { label: 'Parking', color: '#5b6270', icon: 'P' },
+  restroom: { label: 'Restrooms', color: '#287f9b', icon: 'R' },
 }
 
 const formatEventTime = (iso: string) =>

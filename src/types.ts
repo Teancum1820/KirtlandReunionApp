@@ -36,6 +36,7 @@ export type LocationCategory =
   | 'community'
   | 'outdoors'
   | 'parking'
+  | 'restroom'
 
 export type ReunionLocation = {
   id: string
