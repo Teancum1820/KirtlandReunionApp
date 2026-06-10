@@ -628,14 +628,22 @@ function ScheduleView({
   )
 }
 
-function MapFocus({ position }: { position: [number, number] | null }) {
+function MapFocus({
+  position,
+  request,
+}: {
+  position: [number, number] | null
+  request: number
+}) {
   const map = useMap()
   const lat = position?.[0]
   const lng = position?.[1]
 
   useEffect(() => {
-    if (lat !== undefined && lng !== undefined) map.flyTo([lat, lng], 15)
-  }, [lat, lng, map])
+    if (lat !== undefined && lng !== undefined) {
+      map.flyTo([lat, lng], 17, { duration: 0.8 })
+    }
+  }, [lat, lng, map, request])
 
   return null
 }
@@ -645,6 +653,7 @@ function ExploreMap() {
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
     null,
   )
+  const [focusRequest, setFocusRequest] = useState(0)
   const [userPosition, setUserPosition] = useState<[number, number] | null>(
     null,
   )
@@ -662,6 +671,11 @@ function ExploreMap() {
   const selectCategory = (nextCategory: LocationCategory | 'all') => {
     setCategory(nextCategory)
     setSelectedLocationId(null)
+  }
+
+  const focusLocation = (locationId: string) => {
+    setSelectedLocationId(locationId)
+    setFocusRequest((request) => request + 1)
   }
 
   const locateUser = () => {
@@ -730,7 +744,7 @@ function ExploreMap() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapFocus position={focusPosition} />
+            <MapFocus position={focusPosition} request={focusRequest} />
             {userPosition && (
               <Circle
                 center={userPosition}
@@ -758,7 +772,7 @@ function ExploreMap() {
                   key={location.id}
                   position={[location.lat, location.lng]}
                   eventHandlers={{
-                    click: () => setSelectedLocationId(location.id),
+                    click: () => focusLocation(location.id),
                   }}
                 >
                   <Popup>
@@ -802,7 +816,7 @@ function ExploreMap() {
               >
                 <button
                   className="place-focus"
-                  onClick={() => setSelectedLocationId(location.id)}
+                  onClick={() => focusLocation(location.id)}
                   type="button"
                 >
                   <span
