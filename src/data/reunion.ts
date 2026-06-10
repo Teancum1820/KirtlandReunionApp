@@ -1,6 +1,5 @@
 import type {
   Family,
-  ReunionLocation,
   ScheduleEvent,
 } from '../types'
 
@@ -51,73 +50,6 @@ export const families: Family[] = [
         description: 'Draft schedule group',
       },
     ],
-  },
-]
-
-export const locations: ReunionLocation[] = [
-  {
-    id: 'kirtland-temple',
-    name: 'Kirtland Temple',
-    description: 'Historic temple and reunion tour destination.',
-    lat: 41.62533,
-    lng: -81.36137,
-    category: 'historic',
-  },
-  {
-    id: 'historic-kirtland',
-    name: 'Historic Kirtland',
-    description: 'Visitors’ center, historic village, and gathering point.',
-    lat: 41.62128,
-    lng: -81.36349,
-    category: 'historic',
-  },
-  {
-    id: 'whitney-store',
-    name: 'Newel K. Whitney Store',
-    description: 'Historic site within the Kirtland village.',
-    lat: 41.62187,
-    lng: -81.36312,
-    category: 'historic',
-  },
-  {
-    id: 'shuttle-hub',
-    name: 'Reunion Shuttle Hub',
-    description: 'Sample pickup point. Confirm before the reunion.',
-    lat: 41.62086,
-    lng: -81.36406,
-    category: 'shuttle',
-  },
-  {
-    id: 'visitor-restrooms',
-    name: 'Visitors’ Center Restrooms',
-    description: 'Accessible facilities near the main gathering area.',
-    lat: 41.62102,
-    lng: -81.36369,
-    category: 'restroom',
-  },
-  {
-    id: 'reunion-parking',
-    name: 'Reunion Parking',
-    description: 'Sample parking area for family activities.',
-    lat: 41.62027,
-    lng: -81.36502,
-    category: 'parking',
-  },
-  {
-    id: 'lunch-pavilion',
-    name: 'Family Lunch Pavilion',
-    description: 'Sample meal and water station.',
-    lat: 41.62217,
-    lng: -81.36417,
-    category: 'food',
-  },
-  {
-    id: 'evening-gathering',
-    name: 'Evening Gathering Lawn',
-    description: 'Sample location for music and family storytelling.',
-    lat: 41.62315,
-    lng: -81.36238,
-    category: 'gathering',
   },
 ]
 

@@ -30,16 +30,19 @@ export type ScheduleEvent = {
 
 export type LocationCategory =
   | 'historic'
-  | 'shuttle'
-  | 'restroom'
-  | 'food'
+  | 'dining'
+  | 'shopping'
+  | 'lodging'
+  | 'community'
+  | 'outdoors'
   | 'parking'
-  | 'gathering'
 
 export type ReunionLocation = {
   id: string
   name: string
   description: string
+  address?: string
+  mapNumber?: number
   lat: number
   lng: number
   category: LocationCategory
