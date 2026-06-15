@@ -19,10 +19,12 @@ import {
   Navigation,
   Phone,
   Route,
+  Search,
   Send,
   Settings,
   ShieldCheck,
   Sparkles,
+  UserRoundCheck,
   Users,
   WifiOff,
   X,
@@ -101,6 +103,22 @@ const formatEventTime = (iso: string) =>
     minute: '2-digit',
     timeZone: reunionConfig.timeZone,
   }).format(new Date(iso))
+
+const formatEventTimeLabel = (event: ScheduleEvent) =>
+  event.timeLabel ?? formatEventTime(event.start)
+
+const eventIsCurrentOrUpcoming = (event: ScheduleEvent, now: Date) => {
+  const fallbackEnd = new Date(event.start).getTime() + 60 * 60 * 1000
+  const end = event.end ? new Date(event.end).getTime() : fallbackEnd
+  return end > now.getTime()
+}
+
+const eventScopeLabel = (event: ScheduleEvent, group: ReunionGroup) => {
+  if (event.optional) return 'Optional public event'
+  if (event.scope === 'public') return 'Public event'
+  if (event.scope === 'reunion') return 'All Millet groups'
+  return `${group.name} schedule`
+}
 
 const formatDay = (iso: string) =>
   new Intl.DateTimeFormat('en-US', {
@@ -257,6 +275,7 @@ function App() {
             events={visibleEvents}
             family={family}
             group={group}
+            memberName={selection.memberName}
             navigate={navigate}
             openGroupPicker={() => setShowGroupPicker(true)}
           />
@@ -272,6 +291,7 @@ function App() {
             family={family}
             group={group}
             installApp={installApp}
+            memberName={selection.memberName}
             openGroupPicker={() => setShowGroupPicker(true)}
           />
         )}
@@ -356,6 +376,7 @@ function HomeView({
   events,
   family,
   group,
+  memberName,
   navigate,
   openGroupPicker,
 }: {
@@ -364,14 +385,17 @@ function HomeView({
   events: ScheduleEvent[]
   family: Family
   group: ReunionGroup
+  memberName?: string
   navigate: (view: View) => void
   openGroupPicker: () => void
 }) {
   const now = new Date()
+  const coreEvents = events.filter((event) => !event.optional)
   const nextEvent =
-    events.find((event) => new Date(event.end).getTime() > now.getTime()) ??
+    coreEvents.find((event) => eventIsCurrentOrUpcoming(event, now)) ??
+    coreEvents[0] ??
     events[0]
-  const followingEvents = events
+  const followingEvents = coreEvents
     .filter((event) => event.id !== nextEvent?.id)
     .slice(0, 3)
 
@@ -392,18 +416,18 @@ function HomeView({
         <div className="hero-copy">
           <span className="year-chip">
             <Sparkles size={14} />
-            Kirtland, Ohio · 2026
+            June 18-21, 2026
           </span>
-          <h1>Welcome, {group.name}</h1>
+          <h1>Welcome, {memberName ?? group.name}</h1>
           <p>
-            Everything your family needs for a meaningful few days together.
+            Your {group.name} itinerary and shared reunion events are ready.
           </p>
           <button className="group-pill" onClick={openGroupPicker} type="button">
             <span
               className="family-dot"
               style={{ background: family.accent }}
             />
-            {family.shortName}
+            {group.name} · {family.shortName}
             <ChevronRight size={16} />
           </button>
         </div>
@@ -440,7 +464,7 @@ function HomeView({
               <div>
                 <div className="time-row">
                   <Clock3 size={15} />
-                  {formatEventTime(nextEvent.start)}
+                  {formatEventTimeLabel(nextEvent)}
                 </div>
                 <h2>{nextEvent.title}</h2>
                 <p>{nextEvent.locationName}</p>
@@ -520,7 +544,7 @@ function EventRow({ event }: { event: ScheduleEvent }) {
   return (
     <article className="event-row">
       <div className="event-time">
-        <strong>{formatEventTime(event.start)}</strong>
+        <strong>{formatEventTimeLabel(event)}</strong>
         <span>{formatShortDay(event.start).split(',')[0]}</span>
       </div>
       <div className={`event-line ${event.type}`} />
@@ -560,7 +584,7 @@ function ScheduleView({
       <PageHeader
         eyebrow={`${family.shortName} · ${group.name}`}
         title="Your schedule"
-        action={<div className="draft-badge">Draft itinerary</div>}
+        action={<div className="draft-badge">Tentative schedule</div>}
       />
 
       <div className="day-tabs" role="tablist" aria-label="Schedule days">
@@ -597,23 +621,25 @@ function ScheduleView({
         {dayEvents.map((event, index) => (
           <article className="schedule-card" key={event.id}>
             <div className="schedule-time">
-              <strong>{formatEventTime(event.start)}</strong>
-              <span>
-                {Math.round(
-                  (new Date(event.end).getTime() -
-                    new Date(event.start).getTime()) /
-                    60000,
-                )}{' '}
-                min
-              </span>
+              <strong>{formatEventTimeLabel(event)}</strong>
+              {event.end && (
+                <span>
+                  {Math.round(
+                    (new Date(event.end).getTime() -
+                      new Date(event.start).getTime()) /
+                      60000,
+                  )}{' '}
+                  min
+                </span>
+              )}
             </div>
             <div className="schedule-track">
               <span className={`track-dot ${event.type}`} />
               {index < dayEvents.length - 1 && <span className="track-line" />}
             </div>
             <div className="schedule-copy">
-              <span className={`type-chip ${event.type}`}>
-                {event.type === 'shuttle' ? 'Shuttle' : event.type}
+              <span className={`type-chip scope-${event.scope}`}>
+                {eventScopeLabel(event, group)}
               </span>
               <h2>{event.title}</h2>
               <p>
@@ -621,6 +647,17 @@ function ScheduleView({
                 {event.locationName}
               </p>
               {event.note && <small>{event.note}</small>}
+              {event.link && (
+                <a
+                  className="schedule-link"
+                  href={event.link}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {event.linkLabel ?? 'Event details'}
+                  <ChevronRight size={15} />
+                </a>
+              )}
             </div>
           </article>
         ))}
@@ -860,6 +897,7 @@ function MoreView({
   family,
   group,
   installApp,
+  memberName,
   openGroupPicker,
 }: {
   alertsEnabled: boolean
@@ -867,6 +905,7 @@ function MoreView({
   family: Family
   group: ReunionGroup
   installApp: () => void
+  memberName?: string
   openGroupPicker: () => void
 }) {
   return (
@@ -883,7 +922,9 @@ function MoreView({
         <div>
           <small>Your reunion group</small>
           <strong>{family.name}</strong>
-          <span>{group.name}</span>
+          <span>
+            {memberName ? `${memberName} · ${group.name}` : group.name}
+          </span>
         </div>
         <button onClick={openGroupPicker} type="button">
           Change
@@ -1097,11 +1138,45 @@ function GroupPicker({
   onSave: (selection: UserSelection) => void
 }) {
   const [draft, setDraft] = useState(current)
+  const [nameQuery, setNameQuery] = useState(current.memberName ?? '')
+  const [showMatches, setShowMatches] = useState(false)
   const selectedFamily =
     families.find((family) => family.id === draft.familyId) ?? families[0]
+  const selectedGroup =
+    selectedFamily.groups.find((group) => group.id === draft.groupId) ??
+    selectedFamily.groups[0]
+  const allMembers = useMemo(
+    () =>
+      selectedFamily.groups.flatMap((group) =>
+        group.memberNames.map((name) => ({ name, group })),
+      ),
+    [selectedFamily],
+  )
+  const memberMatches = useMemo(() => {
+    const query = nameQuery.trim().toLocaleLowerCase()
+    if (query.length < 2) return []
+
+    return allMembers
+      .filter((member) => member.name.toLocaleLowerCase().includes(query))
+      .sort((left, right) => {
+        const leftStarts = left.name.toLocaleLowerCase().startsWith(query)
+        const rightStarts = right.name.toLocaleLowerCase().startsWith(query)
+        if (leftStarts !== rightStarts) return leftStarts ? -1 : 1
+        return left.name.localeCompare(right.name)
+      })
+      .slice(0, 12)
+  }, [allMembers, nameQuery])
 
   const selectFamily = (family: Family) => {
     setDraft({ familyId: family.id, groupId: family.groups[0].id })
+    setNameQuery('')
+    setShowMatches(false)
+  }
+
+  const selectMember = (name: string, groupId: string) => {
+    setDraft({ familyId: selectedFamily.id, groupId, memberName: name })
+    setNameQuery(name)
+    setShowMatches(false)
   }
 
   return (
@@ -1126,8 +1201,8 @@ function GroupPicker({
           <Users size={26} />
         </div>
         <span className="eyebrow">Personalize your reunion</span>
-        <h2 id="group-picker-title">Which group are you with?</h2>
-        <p>Your choice shows the right schedule and shuttle alerts.</p>
+        <h2 id="group-picker-title">Find your reunion group</h2>
+        <p>Search for your name and we will open the correct schedule.</p>
 
         <div className="family-options">
           {families.map((family) => (
@@ -1159,18 +1234,88 @@ function GroupPicker({
           ))}
         </div>
 
+        <div className="member-search">
+          <label htmlFor="member-search">Find your name</label>
+          <div className="member-search-input">
+            <Search size={18} />
+            <input
+              aria-controls="member-search-results"
+              autoComplete="off"
+              id="member-search"
+              onChange={(event) => {
+                setNameQuery(event.target.value)
+                setDraft({ ...draft, memberName: undefined })
+                setShowMatches(true)
+              }}
+              onFocus={() => setShowMatches(true)}
+              placeholder="Start typing your name"
+              type="search"
+              value={nameQuery}
+            />
+          </div>
+
+          {showMatches && nameQuery.trim().length >= 2 && (
+            <div
+              className="member-results"
+              id="member-search-results"
+              role="listbox"
+            >
+              {memberMatches.map((member) => (
+                <button
+                  key={`${member.group.id}-${member.name}`}
+                  onClick={() => selectMember(member.name, member.group.id)}
+                  role="option"
+                  type="button"
+                >
+                  <span>
+                    <strong>{member.name}</strong>
+                    <small>
+                      {member.group.name} · {member.group.description}
+                    </small>
+                  </span>
+                  <ChevronRight size={17} />
+                </button>
+              ))}
+              {memberMatches.length === 0 && (
+                <p>No matching name found. Choose your group below.</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {draft.memberName && (
+          <div className="member-confirmation">
+            <UserRoundCheck size={21} />
+            <span>
+              <small>Schedule found for {draft.memberName}</small>
+              <strong>{selectedGroup.name}</strong>
+            </span>
+          </div>
+        )}
+
+        <div className="picker-divider">
+          <span>or choose manually</span>
+        </div>
+
         <div className="group-options">
-          <label htmlFor="group-select">Choose your schedule group</label>
+          <label htmlFor="group-select">
+            Can't find your name? Choose your schedule group
+          </label>
           <select
             id="group-select"
-            onChange={(event) =>
-              setDraft({ ...draft, groupId: event.target.value })
-            }
+            onChange={(event) => {
+              setDraft({
+                familyId: selectedFamily.id,
+                groupId: event.target.value,
+              })
+              setNameQuery('')
+              setShowMatches(false)
+            }}
             value={draft.groupId}
           >
             {selectedFamily.groups.map((group) => (
               <option key={group.id} value={group.id}>
-                {group.name}
+                {group.name} - {group.description}
               </option>
             ))}
           </select>
@@ -1181,7 +1326,7 @@ function GroupPicker({
           onClick={() => onSave(draft)}
           type="button"
         >
-          View my reunion
+          View {selectedGroup.name} schedule
           <ChevronRight size={18} />
         </button>
         <small className="picker-note">

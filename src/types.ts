@@ -2,6 +2,7 @@ export type ReunionGroup = {
   id: string
   name: string
   description: string
+  memberNames: string[]
 }
 
 export type Family = {
@@ -14,6 +15,7 @@ export type Family = {
 }
 
 export type ScheduleEventType = 'shuttle' | 'activity' | 'meal'
+export type ScheduleEventScope = 'group' | 'reunion' | 'public'
 
 export type ScheduleEvent = {
   id: string
@@ -21,11 +23,16 @@ export type ScheduleEvent = {
   groupIds: string[]
   title: string
   start: string
-  end: string
+  end?: string
   locationId: string
   locationName: string
   type: ScheduleEventType
+  scope: ScheduleEventScope
   note?: string
+  optional?: boolean
+  timeLabel?: string
+  link?: string
+  linkLabel?: string
 }
 
 export type LocationCategory =
@@ -52,6 +59,7 @@ export type ReunionLocation = {
 export type UserSelection = {
   familyId: string
   groupId: string
+  memberName?: string
 }
 
 export type OrganizerAlert = {

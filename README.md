@@ -9,19 +9,17 @@ A mobile-first PWA for 2026 family reunions in Kirtland, Ohio. The app provides:
 - Organizer alert controls protected by Firebase Authentication
 - Automated GitHub Pages deployment
 
-## Important draft data
+## Reunion data
 
-The schedule dates, group names, phone number, shuttle stops, and several map
-points are planning placeholders. Review all attendee-facing data before
-publishing:
+The app currently includes only the Artemus Millett / Millet Family reunion.
+Member assignments and group site visits are loaded from:
 
-- `src/data/reunion.ts`
-- The sample phone number in `src/App.tsx`
+- `data/Millet Family Groups.csv`
+- `data/Milliet Group Scheduels.csv`
+- `data/millet Public Events.html`
 
-The included families are:
-
-- Artemus Millett / Millet Family
-- Martin & Emer Harris Family
+The public schedule is marked tentative in the attendee experience. Review the
+sample help-line phone number in `src/App.tsx` before publishing.
 
 ## Local development
 
