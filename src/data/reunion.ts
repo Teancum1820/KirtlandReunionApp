@@ -224,21 +224,17 @@ const raceUrl =
 const templeOpenHouseUrl =
   'https://www.churchofjesuschrist.org/featured/cleveland-ohio-open-house?lang=eng'
 
+export const templeOpenHouseReminder = {
+  title: 'Cleveland Ohio Temple Open House',
+  dates: 'June 18-July 3, 2026',
+  weekdayHours: 'Monday-Friday: 12:00 PM-7:00 PM',
+  saturdayHours: 'Saturday: 10:00 AM-6:00 PM',
+  location: '5997 Brecksville Rd, Independence, OH 44131',
+  note: 'This is an optional public event. The free walking tour takes approximately 25 minutes, and carpooling is encouraged.',
+  link: templeOpenHouseUrl,
+}
+
 const commonEvents: ScheduleEvent[] = [
-  commonEvent({
-    id: 'millet-thu-temple-open-house',
-    title: 'Cleveland Ohio Temple Open House',
-    start: '2026-06-18T12:00:00-04:00',
-    end: '2026-06-18T19:00:00-04:00',
-    locationId: 'cleveland-ohio-temple',
-    locationName: '5997 Brecksville Rd, Independence',
-    type: eventType('activity'),
-    scope: 'public',
-    optional: true,
-    note: 'Free public walking tour, approximately 25 minutes. Carpooling is encouraged.',
-    link: templeOpenHouseUrl,
-    linkLabel: 'Open house details',
-  }),
   commonEvent({
     id: 'millet-thu-registration',
     title: 'Reunion registration',
@@ -289,20 +285,6 @@ const commonEvents: ScheduleEvent[] = [
     type: eventType('activity'),
     scope: 'reunion',
     note: 'Follow the detailed stops and times listed for your group.',
-  }),
-  commonEvent({
-    id: 'millet-fri-temple-open-house',
-    title: 'Cleveland Ohio Temple Open House',
-    start: '2026-06-19T12:00:00-04:00',
-    end: '2026-06-19T19:00:00-04:00',
-    locationId: 'cleveland-ohio-temple',
-    locationName: '5997 Brecksville Rd, Independence',
-    type: eventType('activity'),
-    scope: 'public',
-    optional: true,
-    note: 'Free public walking tour, approximately 25 minutes. Carpooling is encouraged.',
-    link: templeOpenHouseUrl,
-    linkLabel: 'Open house details',
   }),
   commonEvent({
     id: 'millet-fri-youth-devotional',
@@ -369,20 +351,6 @@ const commonEvents: ScheduleEvent[] = [
     scope: 'public',
   }),
   commonEvent({
-    id: 'millet-sat-temple-open-house',
-    title: 'Cleveland Ohio Temple Open House',
-    start: '2026-06-20T10:00:00-04:00',
-    end: '2026-06-20T18:00:00-04:00',
-    locationId: 'cleveland-ohio-temple',
-    locationName: '5997 Brecksville Rd, Independence',
-    type: eventType('activity'),
-    scope: 'public',
-    optional: true,
-    note: 'Free public walking tour, approximately 25 minutes. Carpooling is encouraged.',
-    link: templeOpenHouseUrl,
-    linkLabel: 'Open house details',
-  }),
-  commonEvent({
     id: 'millet-sat-family-picture',
     title: 'Millet family picture',
     start: '2026-06-20T10:30:00-04:00',
@@ -414,8 +382,8 @@ const commonEvents: ScheduleEvent[] = [
     id: 'millet-sat-concert',
     title: 'The Bonner Family Concert',
     start: '2026-06-20T19:00:00-04:00',
-    locationId: 'concert-tba',
-    locationName: 'Location TBA',
+    locationId: 'kirtland-gazebo',
+    locationName: 'The Gazebo',
     type: eventType('activity'),
     scope: 'public',
   }),

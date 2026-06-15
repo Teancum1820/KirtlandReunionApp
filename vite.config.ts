@@ -19,7 +19,7 @@ export default defineConfig({
         name: 'Kirtland Together - Family Reunion 2026',
         short_name: 'Kirtland Together',
         description:
-          'Family reunion schedules, shuttle alerts, and an interactive Kirtland map.',
+          'Family reunion schedules and an interactive Kirtland map.',
         theme_color: '#104b46',
         background_color: '#f4f2eb',
         display: 'standalone',

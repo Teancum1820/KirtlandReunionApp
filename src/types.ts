@@ -14,7 +14,7 @@ export type Family = {
   groups: ReunionGroup[]
 }
 
-export type ScheduleEventType = 'shuttle' | 'activity' | 'meal'
+export type ScheduleEventType = 'activity' | 'meal'
 export type ScheduleEventScope = 'group' | 'reunion' | 'public'
 
 export type ScheduleEvent = {
@@ -60,12 +60,4 @@ export type UserSelection = {
   familyId: string
   groupId: string
   memberName?: string
-}
-
-export type OrganizerAlert = {
-  alertType: 'departing' | 'arriving'
-  familyId: string | null
-  groupId: string | null
-  locationName: string
-  target: 'group' | 'family' | 'all'
 }
