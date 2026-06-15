@@ -1,28 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Bell,
-  BellRing,
-  BusFront,
   CalendarDays,
   Check,
   ChevronRight,
-  CircleHelp,
   Clock3,
   Download,
   Home,
   Info,
   LocateFixed,
-  LogIn,
   Map as MapIcon,
   MapPin,
   Menu,
   Navigation,
-  Phone,
   Route,
   Search,
-  Send,
-  Settings,
-  ShieldCheck,
   Sparkles,
   UserRoundCheck,
   Users,
@@ -45,6 +36,7 @@ import {
   families,
   reunionConfig,
   scheduleEvents,
+  templeOpenHouseReminder,
 } from './data/reunion'
 import type {
   Family,
@@ -61,12 +53,6 @@ type InstallPrompt = Event & {
 }
 
 const selectionKey = 'kirtland-reunion-selection'
-const alertKey = 'kirtland-reunion-alerts'
-const firebaseConfigured = Boolean(
-  import.meta.env.VITE_FIREBASE_API_KEY &&
-    import.meta.env.VITE_FIREBASE_PROJECT_ID &&
-    import.meta.env.VITE_FIREBASE_APP_ID,
-)
 const defaultSelection: UserSelection = {
   familyId: families[0].id,
   groupId: families[0].groups[0].id,
@@ -156,10 +142,7 @@ function App() {
     storedSelection ?? defaultSelection,
   )
   const [showGroupPicker, setShowGroupPicker] = useState(!storedSelection)
-  const [alertsEnabled, setAlertsEnabled] = useState(
-    () => localStorage.getItem(alertKey) === 'enabled',
-  )
-  const [alertMessage, setAlertMessage] = useState('')
+  const [statusMessage, setStatusMessage] = useState('')
   const [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
 
@@ -205,21 +188,10 @@ function App() {
     setShowGroupPicker(false)
   }
 
-  const enableAlerts = async () => {
-    setAlertMessage('Connecting alerts...')
-    const { enableRemoteAlerts } = await import('./lib/firebase')
-    const result = await enableRemoteAlerts(selection)
-    if (result.ok) {
-      setAlertsEnabled(true)
-      localStorage.setItem(alertKey, 'enabled')
-    }
-    setAlertMessage(result.message)
-  }
-
   const installApp = async () => {
     if (!installPrompt) {
-      setAlertMessage(
-        'Use your browser menu and choose “Add to Home Screen” or “Install app.”',
+      setStatusMessage(
+        'Use your browser menu and choose "Add to Home Screen" or "Install app."',
       )
       return
     }
@@ -270,8 +242,6 @@ function App() {
 
         {view === 'home' && (
           <HomeView
-            alertsEnabled={alertsEnabled}
-            enableAlerts={enableAlerts}
             events={visibleEvents}
             family={family}
             group={group}
@@ -286,8 +256,6 @@ function App() {
         {view === 'map' && <ExploreMap />}
         {view === 'more' && (
           <MoreView
-            alertsEnabled={alertsEnabled}
-            enableAlerts={enableAlerts}
             family={family}
             group={group}
             installApp={installApp}
@@ -320,12 +288,12 @@ function App() {
         />
       )}
 
-      {alertMessage && (
+      {statusMessage && (
         <div className="toast" role="status">
-          <span>{alertMessage}</span>
+          <span>{statusMessage}</span>
           <button
             aria-label="Dismiss message"
-            onClick={() => setAlertMessage('')}
+            onClick={() => setStatusMessage('')}
             type="button"
           >
             <X size={17} />
@@ -371,8 +339,6 @@ function PageHeader({
 }
 
 function HomeView({
-  alertsEnabled,
-  enableAlerts,
   events,
   family,
   group,
@@ -380,8 +346,6 @@ function HomeView({
   navigate,
   openGroupPicker,
 }: {
-  alertsEnabled: boolean
-  enableAlerts: () => void
   events: ScheduleEvent[]
   family: Family
   group: ReunionGroup
@@ -404,14 +368,6 @@ function HomeView({
       <section className="home-hero">
         <div className="hero-top">
           <Brand />
-          <button
-            className="icon-button"
-            aria-label="Notification settings"
-            onClick={enableAlerts}
-            type="button"
-          >
-            {alertsEnabled ? <BellRing size={21} /> : <Bell size={21} />}
-          </button>
         </div>
         <div className="hero-copy">
           <span className="year-chip">
@@ -434,19 +390,6 @@ function HomeView({
       </section>
 
       <div className="content-wrap home-grid">
-        {!alertsEnabled && (
-          <button className="alert-invite" onClick={enableAlerts} type="button">
-            <span className="alert-icon">
-              <BellRing size={21} />
-            </span>
-            <span>
-              <strong>Never miss your shuttle</strong>
-              <small>Turn on departure and arrival alerts</small>
-            </span>
-            <ChevronRight size={19} />
-          </button>
-        )}
-
         {nextEvent && (
           <section className="next-card">
             <div className="section-label">
@@ -455,11 +398,7 @@ function HomeView({
             </div>
             <div className="next-card-main">
               <div className={`event-symbol ${nextEvent.type}`}>
-                {nextEvent.type === 'shuttle' ? (
-                  <BusFront size={24} />
-                ) : (
-                  <MapPin size={24} />
-                )}
+                <MapPin size={24} />
               </div>
               <div>
                 <div className="time-row">
@@ -500,7 +439,7 @@ function HomeView({
                 <MapIcon size={22} />
               </span>
               <strong>Reunion map</strong>
-              <small>Sites, shuttles & more</small>
+              <small>Sites, parking & amenities</small>
             </button>
             <button onClick={() => navigate('schedule')} type="button">
               <span className="quick-icon gold">
@@ -509,13 +448,6 @@ function HomeView({
               <strong>My schedule</strong>
               <small>{group.name} itinerary</small>
             </button>
-            <a href="tel:+14402560000">
-              <span className="quick-icon plum">
-                <Phone size={22} />
-              </span>
-              <strong>Get help</strong>
-              <small>Reunion support line</small>
-            </a>
           </div>
         </section>
 
@@ -662,6 +594,35 @@ function ScheduleView({
           </article>
         ))}
       </div>
+
+      <aside className="temple-reminder">
+        <span className="eyebrow">Optional public event reminder</span>
+        <h2>{templeOpenHouseReminder.title}</h2>
+        <p>{templeOpenHouseReminder.note}</p>
+        <dl>
+          <div>
+            <dt>Dates</dt>
+            <dd>{templeOpenHouseReminder.dates}</dd>
+          </div>
+          <div>
+            <dt>Hours</dt>
+            <dd>{templeOpenHouseReminder.weekdayHours}</dd>
+            <dd>{templeOpenHouseReminder.saturdayHours}</dd>
+          </div>
+          <div>
+            <dt>Location</dt>
+            <dd>{templeOpenHouseReminder.location}</dd>
+          </div>
+        </dl>
+        <a
+          href={templeOpenHouseReminder.link}
+          rel="noreferrer"
+          target="_blank"
+        >
+          Open house details
+          <ChevronRight size={16} />
+        </a>
+      </aside>
     </div>
   )
 }
@@ -892,16 +853,12 @@ function ExploreMap() {
 }
 
 function MoreView({
-  alertsEnabled,
-  enableAlerts,
   family,
   group,
   installApp,
   memberName,
   openGroupPicker,
 }: {
-  alertsEnabled: boolean
-  enableAlerts: () => void
   family: Family
   group: ReunionGroup
   installApp: () => void
@@ -910,7 +867,7 @@ function MoreView({
 }) {
   return (
     <div className="content-wrap page-view more-page">
-      <PageHeader eyebrow="Settings & support" title="More" />
+      <PageHeader eyebrow="App & reunion" title="More" />
 
       <section className="profile-card">
         <span
@@ -933,20 +890,6 @@ function MoreView({
 
       <section className="settings-section">
         <span className="eyebrow">App settings</span>
-        <button className="settings-row" onClick={enableAlerts} type="button">
-          <span className="setting-icon teal">
-            <BellRing size={20} />
-          </span>
-          <span>
-            <strong>Shuttle alerts</strong>
-            <small>
-              {alertsEnabled
-                ? 'Enabled for your family group'
-                : 'Get departure and arrival updates'}
-            </small>
-          </span>
-          {alertsEnabled ? <Check size={19} /> : <ChevronRight size={19} />}
-        </button>
         <button className="settings-row" onClick={installApp} type="button">
           <span className="setting-icon gold">
             <Download size={20} />
@@ -959,170 +902,10 @@ function MoreView({
         </button>
       </section>
 
-      <section className="settings-section">
-        <span className="eyebrow">Help & information</span>
-        <a className="settings-row" href="tel:+14402560000">
-          <span className="setting-icon plum">
-            <Phone size={20} />
-          </span>
-          <span>
-            <strong>Reunion help line</strong>
-            <small>(440) 256-0000 · Sample number</small>
-          </span>
-          <ChevronRight size={19} />
-        </a>
-        <div className="settings-row">
-          <span className="setting-icon blue">
-            <CircleHelp size={20} />
-          </span>
-          <span>
-            <strong>Emergency information</strong>
-            <small>For emergencies, call 911</small>
-          </span>
-        </div>
-      </section>
-
-      <OrganizerPanel family={family} group={group} />
-
       <p className="app-version">
-        Kirtland Together · 2026 planning preview
+        Created by the Kirtland Heritage Group 2026
       </p>
     </div>
-  )
-}
-
-function OrganizerPanel({
-  family,
-  group,
-}: {
-  family: Family
-  group: ReunionGroup
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const [signedIn, setSignedIn] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [status, setStatus] = useState('')
-  const [alertType, setAlertType] = useState<'departing' | 'arriving'>(
-    'departing',
-  )
-  const [target, setTarget] = useState<'group' | 'family' | 'all'>('group')
-
-  const login = async (event: React.FormEvent) => {
-    event.preventDefault()
-    setStatus('Signing in...')
-    const { signInOrganizer } = await import('./lib/firebase')
-    const result = await signInOrganizer(email, password)
-    setSignedIn(result.ok)
-    setStatus(result.message)
-  }
-
-  const send = async () => {
-    setStatus('Sending alert...')
-    const { sendOrganizerAlert } = await import('./lib/firebase')
-    const result = await sendOrganizerAlert({
-      alertType,
-      familyId: target === 'all' ? null : family.id,
-      groupId: target === 'group' ? group.id : null,
-      locationName: 'Reunion shuttle stop',
-      target,
-    })
-    setStatus(result.message)
-  }
-
-  return (
-    <section className="organizer-panel">
-      <button
-        className="organizer-toggle"
-        onClick={() => setExpanded((value) => !value)}
-        type="button"
-      >
-        <span className="setting-icon dark">
-          <ShieldCheck size={20} />
-        </span>
-        <span>
-          <strong>Organizer tools</strong>
-          <small>Send a shuttle status update</small>
-        </span>
-        <ChevronRight
-          className={expanded ? 'rotated' : ''}
-          size={19}
-        />
-      </button>
-      {expanded && (
-        <div className="organizer-content">
-          {!firebaseConfigured && (
-            <div className="setup-note">
-              <Settings size={17} />
-              Connect Firebase environment variables to activate live alerts.
-            </div>
-          )}
-          {!signedIn ? (
-            <form onSubmit={login}>
-              <label>
-                Organizer email
-                <input
-                  autoComplete="email"
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                  type="email"
-                  value={email}
-                />
-              </label>
-              <label>
-                Password
-                <input
-                  autoComplete="current-password"
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                  type="password"
-                  value={password}
-                />
-              </label>
-              <button className="primary-button" type="submit">
-                <LogIn size={17} />
-                Sign in
-              </button>
-            </form>
-          ) : (
-            <div className="alert-composer">
-              <label>
-                Shuttle status
-                <select
-                  onChange={(event) =>
-                    setAlertType(
-                      event.target.value as 'departing' | 'arriving',
-                    )
-                  }
-                  value={alertType}
-                >
-                  <option value="departing">Leaving now</option>
-                  <option value="arriving">Arriving now</option>
-                </select>
-              </label>
-              <label>
-                Send to
-                <select
-                  onChange={(event) =>
-                    setTarget(event.target.value as typeof target)
-                  }
-                  value={target}
-                >
-                  <option value="group">{group.name}</option>
-                  <option value="family">All {family.shortName} groups</option>
-                  <option value="all">Everyone</option>
-                </select>
-              </label>
-              <button className="primary-button" onClick={send} type="button">
-                <Send size={17} />
-                Send shuttle alert
-              </button>
-            </div>
-          )}
-          {status && <p className="organizer-status">{status}</p>}
-        </div>
-      )}
-    </section>
   )
 }
 
