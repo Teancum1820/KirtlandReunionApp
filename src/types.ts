@@ -33,6 +33,7 @@ export type ScheduleEvent = {
   timeLabel?: string
   link?: string
   linkLabel?: string
+  mapCategoryLink?: LocationCategory
 }
 
 export type LocationCategory =

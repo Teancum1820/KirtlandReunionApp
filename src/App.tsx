@@ -47,6 +47,11 @@ import type {
 } from './types'
 
 type View = 'home' | 'schedule' | 'map' | 'more'
+type NavigateOptions = {
+  mapCategory?: LocationCategory | 'all'
+}
+type Navigate = (next: View, options?: NavigateOptions) => void
+
 type InstallPrompt = Event & {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
@@ -145,6 +150,7 @@ function App() {
   const [statusMessage, setStatusMessage] = useState('')
   const [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const [mapCategory, setMapCategory] = useState<LocationCategory | 'all'>('all')
 
   const family =
     families.find((item) => item.id === selection.familyId) ?? families[0]
@@ -200,7 +206,10 @@ function App() {
     setInstallPrompt(null)
   }
 
-  const navigate = (next: View) => {
+  const navigate: Navigate = (next, options = {}) => {
+    if (next === 'map') {
+      setMapCategory(options.mapCategory ?? 'all')
+    }
     setView(next)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -251,9 +260,16 @@ function App() {
           />
         )}
         {view === 'schedule' && (
-          <ScheduleView events={visibleEvents} family={family} group={group} />
+          <ScheduleView
+            events={visibleEvents}
+            family={family}
+            group={group}
+            navigate={navigate}
+          />
         )}
-        {view === 'map' && <ExploreMap />}
+        {view === 'map' && (
+          <ExploreMap key={mapCategory} defaultCategory={mapCategory} />
+        )}
         {view === 'more' && (
           <MoreView
             family={family}
@@ -350,7 +366,7 @@ function HomeView({
   family: Family
   group: ReunionGroup
   memberName?: string
-  navigate: (view: View) => void
+  navigate: Navigate
   openGroupPicker: () => void
 }) {
   const now = new Date()
@@ -496,10 +512,12 @@ function ScheduleView({
   events,
   family,
   group,
+  navigate,
 }: {
   events: ScheduleEvent[]
   family: Family
   group: ReunionGroup
+  navigate: Navigate
 }) {
   const days = Array.from(
     new Set(events.map((event) => event.start.slice(0, 10))),
@@ -579,7 +597,19 @@ function ScheduleView({
                 {event.locationName}
               </p>
               {event.note && <small>{event.note}</small>}
-              {event.link && (
+              {event.mapCategoryLink && (
+                <button
+                  className="schedule-link"
+                  onClick={() =>
+                    navigate('map', { mapCategory: event.mapCategoryLink })
+                  }
+                  type="button"
+                >
+                  {event.linkLabel ?? 'View map options'}
+                  <ChevronRight size={15} />
+                </button>
+              )}
+              {!event.mapCategoryLink && event.link && (
                 <a
                   className="schedule-link"
                   href={event.link}
@@ -647,8 +677,13 @@ function MapFocus({
   return null
 }
 
-function ExploreMap() {
-  const [category, setCategory] = useState<LocationCategory | 'all'>('all')
+function ExploreMap({
+  defaultCategory,
+}: {
+  defaultCategory: LocationCategory | 'all'
+}) {
+  const [category, setCategory] =
+    useState<LocationCategory | 'all'>(defaultCategory)
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
     null,
   )
