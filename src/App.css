@@ -713,6 +713,14 @@
   font-weight: 700;
 }
 
+button.schedule-link {
+  padding: 0;
+  border: 0;
+  font-family: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
 .temple-reminder {
   max-width: 780px;
   margin-top: 8px;
