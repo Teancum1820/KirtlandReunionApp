@@ -46,11 +46,18 @@ import type {
   UserSelection,
 } from './types'
 
-type View = 'home' | 'schedule' | 'map' | 'more'
+const appViews = ['home', 'schedule', 'map', 'more'] as const
+type View = (typeof appViews)[number]
 type NavigateOptions = {
   mapCategory?: LocationCategory | 'all'
 }
 type Navigate = (next: View, options?: NavigateOptions) => void
+type AppHistoryState = {
+  kirtlandTogether?: {
+    view?: unknown
+    mapCategory?: unknown
+  }
+}
 
 type InstallPrompt = Event & {
   prompt: () => Promise<void>
@@ -86,6 +93,47 @@ const categoryMeta: Record<
   outdoors: { label: 'Parks & nature', color: '#4f7b42', icon: 'N' },
   parking: { label: 'Parking', color: '#5b6270', icon: 'P' },
   restroom: { label: 'Restrooms', color: '#287f9b', icon: 'R' },
+}
+
+function isView(value: unknown): value is View {
+  return typeof value === 'string' && appViews.includes(value as View)
+}
+
+function isMapCategory(value: unknown): value is LocationCategory | 'all' {
+  return (
+    value === 'all' ||
+    (typeof value === 'string' &&
+      Object.prototype.hasOwnProperty.call(categoryMeta, value))
+  )
+}
+
+function currentHistoryState() {
+  const state = window.history.state
+  return state && typeof state === 'object'
+    ? (state as Record<string, unknown>)
+    : {}
+}
+
+function createAppHistoryState(
+  view: View,
+  mapCategory: LocationCategory | 'all',
+): AppHistoryState {
+  return {
+    ...currentHistoryState(),
+    kirtlandTogether: { view, mapCategory },
+  }
+}
+
+function readAppHistoryState() {
+  const state = window.history.state as AppHistoryState | null
+  const appState = state?.kirtlandTogether
+
+  return {
+    view: isView(appState?.view) ? appState.view : 'home',
+    mapCategory: isMapCategory(appState?.mapCategory)
+      ? appState.mapCategory
+      : 'all',
+  }
 }
 
 const formatEventTime = (iso: string) =>
@@ -142,7 +190,8 @@ function getStoredSelection(): UserSelection | null {
 
 function App() {
   const storedSelection = getStoredSelection()
-  const [view, setView] = useState<View>('home')
+  const [initialAppState] = useState(readAppHistoryState)
+  const [view, setView] = useState<View>(initialAppState.view)
   const [selection, setSelection] = useState<UserSelection>(
     storedSelection ?? defaultSelection,
   )
@@ -150,7 +199,9 @@ function App() {
   const [statusMessage, setStatusMessage] = useState('')
   const [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [mapCategory, setMapCategory] = useState<LocationCategory | 'all'>('all')
+  const [mapCategory, setMapCategory] = useState<LocationCategory | 'all'>(
+    initialAppState.mapCategory,
+  )
 
   const family =
     families.find((item) => item.id === selection.familyId) ?? families[0]
@@ -188,6 +239,24 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextState = readAppHistoryState()
+      setMapCategory(nextState.mapCategory)
+      setView(nextState.view)
+      window.scrollTo({ top: 0, behavior: 'auto' })
+    }
+
+    const currentState = readAppHistoryState()
+    window.history.replaceState(
+      createAppHistoryState(currentState.view, currentState.mapCategory),
+      '',
+      window.location.href,
+    )
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
   const saveSelection = (next: UserSelection) => {
     setSelection(next)
     localStorage.setItem(selectionKey, JSON.stringify(next))
@@ -207,10 +276,21 @@ function App() {
   }
 
   const navigate: Navigate = (next, options = {}) => {
-    if (next === 'map') {
-      setMapCategory(options.mapCategory ?? 'all')
+    const nextMapCategory =
+      next === 'map' ? (options.mapCategory ?? 'all') : mapCategory
+
+    if (next === view && nextMapCategory === mapCategory) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
     }
+
+    setMapCategory(nextMapCategory)
     setView(next)
+    window.history.pushState(
+      createAppHistoryState(next, nextMapCategory),
+      '',
+      window.location.href,
+    )
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
