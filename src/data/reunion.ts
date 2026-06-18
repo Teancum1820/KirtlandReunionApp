@@ -223,6 +223,10 @@ const raceUrl =
   'https://runsignup.com/Race/OH/Kirtland/KirtlandHeritageRun'
 const templeOpenHouseUrl =
   'https://www.churchofjesuschrist.org/featured/cleveland-ohio-open-house?lang=eng'
+const lakelandShuttleLocation =
+  'Lakeland Community College, 7700 Clocktower Drive, Kirtland, OH 44094'
+const shuttleNote =
+  'Free shuttle between Lakeland Community College and Historic Kirtland, including the Kirtland Strawberry Festival and Kirtland Temple. Visitors are encouraged to park at Lakeland and look for Parking & Shuttle signs.'
 
 export const templeOpenHouseReminder = {
   title: 'Cleveland Ohio Temple Open House',
@@ -258,6 +262,18 @@ const commonEvents: ScheduleEvent[] = [
     scope: 'reunion',
   }),
   commonEvent({
+    id: 'millet-thu-strawberry-festival',
+    title: 'Kirtland Strawberry Festival',
+    start: '2026-06-18T17:00:00-04:00',
+    end: '2026-06-18T22:00:00-04:00',
+    timeLabel: '5:00 PM-10:00 PM',
+    locationId: 'kirtland-local-schools',
+    locationName: 'Kirtland Schools',
+    type: eventType('activity'),
+    scope: 'public',
+    optional: true,
+  }),
+  commonEvent({
     id: 'millet-thu-dinner',
     title: 'Dinner on your own',
     start: '2026-06-18T18:30:00-04:00',
@@ -288,6 +304,31 @@ const commonEvents: ScheduleEvent[] = [
     type: eventType('activity'),
     scope: 'reunion',
     note: 'Follow the detailed stops and times listed for your group.',
+  }),
+  commonEvent({
+    id: 'millet-fri-strawberry-festival',
+    title: 'Kirtland Strawberry Festival',
+    start: '2026-06-19T15:00:00-04:00',
+    end: '2026-06-19T23:00:00-04:00',
+    timeLabel: '3:00 PM-11:00 PM',
+    locationId: 'kirtland-local-schools',
+    locationName: 'Kirtland Schools',
+    type: eventType('activity'),
+    scope: 'public',
+    optional: true,
+  }),
+  commonEvent({
+    id: 'millet-fri-free-shuttle',
+    title: 'Free shuttle service',
+    start: '2026-06-19T15:00:00-04:00',
+    end: '2026-06-19T22:00:00-04:00',
+    timeLabel: '3:00 PM-10:00 PM',
+    locationId: 'lakeland-community-college-shuttle',
+    locationName: lakelandShuttleLocation,
+    type: eventType('activity'),
+    scope: 'public',
+    optional: true,
+    note: shuttleNote,
   }),
   commonEvent({
     id: 'millet-fri-youth-devotional',
@@ -321,6 +362,19 @@ const commonEvents: ScheduleEvent[] = [
     linkLabel: 'Register for the 5K',
   }),
   commonEvent({
+    id: 'millet-sat-free-shuttle',
+    title: 'Free shuttle service',
+    start: '2026-06-20T07:00:00-04:00',
+    end: '2026-06-20T21:00:00-04:00',
+    timeLabel: '7:00 AM-9:00 PM',
+    locationId: 'lakeland-community-college-shuttle',
+    locationName: lakelandShuttleLocation,
+    type: eventType('activity'),
+    scope: 'public',
+    optional: true,
+    note: shuttleNote,
+  }),
+  commonEvent({
     id: 'millet-sat-heritage-run',
     title: 'Heritage 5K / Fun Walk',
     start: '2026-06-20T08:00:00-04:00',
@@ -345,16 +399,14 @@ const commonEvents: ScheduleEvent[] = [
   }),
   commonEvent({
     id: 'millet-sat-breakfast',
-    title: 'Breakfast on your own',
+    title: 'Charity breakfast after the 5K',
     start: '2026-06-20T08:45:00-04:00',
     end: '2026-06-20T10:15:00-04:00',
-    locationId: 'dining-options',
-    locationName: 'Dining options in Explore',
+    locationId: 'community-of-christ-chapel',
+    locationName: '9017 Chillicothe Rd, Kirtland',
     type: eventType('meal'),
     scope: 'reunion',
-    note: 'Meal is on your own. Use the dining options in Explore to pick a nearby place.',
-    linkLabel: 'View food options',
-    mapCategoryLink: 'dining',
+    note: 'Charity breakfast follows the Heritage 5K / Fun Walk.',
   }),
   commonEvent({
     id: 'millet-sat-family-picture',
@@ -388,13 +440,26 @@ const commonEvents: ScheduleEvent[] = [
     mapCategoryLink: 'dining',
   }),
   commonEvent({
+    id: 'millet-sat-strawberry-festival',
+    title: 'Kirtland Strawberry Festival',
+    start: '2026-06-20T12:00:00-04:00',
+    end: '2026-06-20T23:00:00-04:00',
+    timeLabel: '12:00 PM-11:00 PM',
+    locationId: 'kirtland-local-schools',
+    locationName: 'Kirtland Schools',
+    type: eventType('activity'),
+    scope: 'public',
+    optional: true,
+  }),
+  commonEvent({
     id: 'millet-sat-concert',
     title: 'The Bonner Family Concert',
     start: '2026-06-20T19:00:00-04:00',
-    locationId: 'kirtland-gazebo',
-    locationName: 'The Gazebo',
+    locationId: 'kirtland-public-library',
+    locationName: 'Kirtland Public Library, 9267 Chillicothe Rd, Kirtland, OH 44094',
     type: eventType('activity'),
     scope: 'public',
+    note: 'Gazebo concert at Kirtland Public Library.',
   }),
   commonEvent({
     id: 'millet-sun-worship',
